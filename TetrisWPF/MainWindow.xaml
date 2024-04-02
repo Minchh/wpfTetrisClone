@@ -9,6 +9,7 @@
         MinWidth="600" MinHeight="600"
         Foreground="White"
         FontFamily="Segoe UI Light" FontSize="28"
+        Icon="Assets/Icon.ico"
         KeyDown="Window_KeyDown">
     <Grid>
         <Grid.RowDefinitions>

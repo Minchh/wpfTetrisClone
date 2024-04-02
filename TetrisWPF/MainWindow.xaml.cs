@@ -41,6 +41,9 @@ namespace TetrisWPF
         };
 
         private readonly Image[,] _imageControls;
+        private readonly int maxDelay = 1000;
+        private readonly int minDelay = 75;
+        private readonly int delayDecrease = 25;
         private GameState _gameState = new GameState();
 
         public MainWindow()
@@ -81,6 +84,7 @@ namespace TetrisWPF
                 for (int c = 0; c < grid.Cols; c++)
                 {
                     GridValue id = grid[r, c];
+                    _imageControls[r, c].Opacity = 1;
                     _imageControls[r, c].Source = _tileImages[(int)id];
                 }
             }
@@ -90,6 +94,7 @@ namespace TetrisWPF
         {
             foreach (Position p in block.TilePositions())
             {
+                _imageControls[p.Row, p.Column].Opacity = 1;
                 _imageControls[p.Row, p.Column].Source = _tileImages[(int)block.ID];
             }
         }
@@ -112,9 +117,21 @@ namespace TetrisWPF
             }
         }
 
+        private void DrawGhostBlock(Block block)
+        {
+            int dropDistance = _gameState.BlockDropDistance();
+
+            foreach (Position p in block.TilePositions())
+            {
+                _imageControls[p.Row + dropDistance, p.Column].Opacity = 0.25;
+                _imageControls[p.Row + dropDistance, p.Column].Source = _tileImages[(int)block.ID];
+            }
+        }
+
         private void Draw(GameState gameState)
         {
             DrawGrid(gameState.GameGrid);
+            DrawGhostBlock(gameState.CurrentBlock);
             DrawBlock(gameState.CurrentBlock);
             DrawNextBlock(gameState.BlockQueue);
             DrawHeldBlock(_gameState.HeldBlock);
@@ -127,7 +144,8 @@ namespace TetrisWPF
 
             while (!_gameState.GameOver)
             {
-                await Task.Delay(500);
+                int delay = System.Math.Max(minDelay, maxDelay - (_gameState.Score * delayDecrease));
+                await Task.Delay(delay);
                 _gameState.MoveBlockDown();
                 Draw(_gameState);
             }
@@ -162,6 +180,9 @@ namespace TetrisWPF
                     break;
                 case Key.C:
                     _gameState.HoldBlock();
+                    break;
+                case Key.Space:
+                    _gameState.DropBlock();
                     break;
                 default:
                     return;
